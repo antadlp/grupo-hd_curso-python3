@@ -1,0 +1,17 @@
+coor_file = "azar.dat" # no necesariamente este nombre
+addvel_file = "mdorg.dat"
+NUM_PARTICULAS = 10
+NON_FROZEN = 10
+TEMPERATURA = 1.0
+
+INPUT_VEL_NAME = "addvel.inp"
+
+f = open(INPUT_VEL_NAME, 'w')
+f.write("{}\n{}\n{}\n{}\n{}".format(coor_file,\
+                                    addvel_file,\
+                                    NUM_PARTICULAS,\
+                                    NON_FROZEN,\
+                                    TEMPERATURA))
+
+f.close()
+
