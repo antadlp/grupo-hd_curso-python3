@@ -1,6 +1,10 @@
 import pandas as pd
 import numpy as np
 from mendeleev import element
+import sys
+sys.path.append("/home/antadlp/Documents/grupo-hd_curso-python3/consola2")
+import subprocess
+
 
 def ranf():
     return np.random.uniform()
@@ -87,3 +91,72 @@ def conf_inicial_md(**kwargs):
     dfr.to_pickle(path_out)
     
     return dic
+    
+    
+
+def crear_mdorg(**kwargs):
+    
+    PATH_COORDS = "coords.dat"
+    PATH_COORDS = kwargs.get("path_coords", PATH_COORDS)
+    
+    PATH_ADDVEL_BIN = "./addvel.exe"
+    PATH_ADDVEL_BIN = kwargs.get("path_addvel_bin", PATH_ADDVEL_BIN)
+
+    MDORG_FILE = "mdorg.dat"
+    MDORG_FILE = kwargs.get("mdorg_file", MDORG_FILE)
+    
+    INPUT_VEL_NAME = "addvelX.inp"
+    INPUT_VEL_NAME = kwargs.get("input_vel_name", INPUT_VEL_NAME)
+    
+    NUM_PARTICULAS = 33
+    NUM_PARTICULAS = kwargs.get("num_particulas", NUM_PARTICULAS)
+    
+    NON_FROZEN = NUM_PARTICULAS
+    NON_FROZEN = kwargs.get("non_frozen", NON_FROZEN)
+    
+    TEMPERATURA = 0.8
+    TEMPERATURA = kwargs.get("temperatura", TEMPERATURA)
+    
+    DENS = 0.3 
+    DENS = kwargs.get("dens", DENS)
+
+    dic = conf_inicial_md(N=NUM_PARTICULAS, dens=DENS, iter_check=15)
+    df = dic['df']
+    L = dic['box']
+    L = np.round(L, decimals=5)
+
+    f = open(PATH_COORDS, 'w')
+    f.write("{}\n".format(len(df)))
+    f.write("{:12.5f}{:12.5f}{:12.5f}\n".format(L, L, L))
+
+    for idx in df.index:
+
+        x = df['x'].loc[idx]
+        y = df['y'].loc[idx]
+        z = df['z'].loc[idx]
+
+        f.write("{:10.5f}{:10.5f}{:10.5f}\n".format(x, y, z))
+
+    f.close()
+
+    f = open(INPUT_VEL_NAME, 'w')
+    f.write("{}\n{}\n{}\n{}\n{}".format(PATH_COORDS,\
+                                        MDORG_FILE,\
+                                        NUM_PARTICULAS,\
+                                        NON_FROZEN,\
+                                        TEMPERATURA))
+
+    f.close()
+
+    cmd = [PATH_ADDVEL_BIN, '<', INPUT_VEL_NAME]
+    cmd = [str(item) for item in cmd]
+    cmd = ' '.join(cmd)
+    process = subprocess.run(cmd, check=True,\
+                                shell=True,\
+                        stdout=subprocess.PIPE,\
+                        universal_newlines=True)
+    
+    
+    return
+    
+    
