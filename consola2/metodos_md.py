@@ -1,13 +1,22 @@
 import pandas as pd
 import numpy as np
-# from mendeleev import element
+from mendeleev import element
+import subprocess
 import sys
 sys.path.append("/home/antadlp/Documents/grupo-hd_curso-python3/consola2")
-import subprocess
 
 
 def ranf():
     return np.random.uniform()
+    
+def proper_round(num, dec=0):
+    num = str(num)[:str(num).index('.')+dec+2]
+    if num[-1]>='5':
+      a = num[:-2-(not dec)]       # integer part
+      b = int(num[-2-(not dec)])+1 # decimal part
+      return float(a)+b**(-dec+1) if a and b == 10 else float(a+str(b))
+    return float(num[:-1])
+    
 
 def conf_inicial_md(**kwargs):
     
@@ -40,7 +49,7 @@ def conf_inicial_md(**kwargs):
         r['y'][i] = box*ranf() - box2
         r['z'][i] = box*ranf() - box2
         el = elms[i]
-        m = 1.0       
+        m = element(el).atomic_weight        
         r['element'][i] = el
         r['m'][i] = m
     
@@ -92,8 +101,6 @@ def conf_inicial_md(**kwargs):
     
     return dic
     
-    
-
 def crear_mdorg(**kwargs):
     
     PATH_COORDS = "coords.dat"
@@ -158,5 +165,179 @@ def crear_mdorg(**kwargs):
     
     
     return
+    
+    
+def config_md(**kwargs):
+    
+    MDORG_FILE = kwargs.get("mdorg_file", "mdorg.dat")
+    
+    f = open(MDORG_FILE, 'r')
+    
+    N = int(f.readline().split()[0])
+    
+    L = f.readline().split()
+    Lx = float(L[0])
+    Ly = float(L[1])
+    Lz = float(L[2])
+    
+    rx = []
+    ry = []
+    rz = []
+    
+    vx = []
+    vy = []
+    vz = []
+    
+    for line in f:
+        
+        sp = line.split()
+        
+        rx.append(sp[0])
+        ry.append(sp[1])
+        rz.append(sp[2])
+        
+        vx.append(sp[3])
+        vy.append(sp[4])
+        vz.append(sp[5])
+    
+    f.close()
+    
+    dic = {}
+    dic['rx'] = np.array(rx).astype(np.float)
+    dic['ry'] = np.array(ry).astype(np.float)
+    _z = np.array(rz).astype(np.float)
+    dic['rz'] = _z - Lz/2.0
+    
+    dic['vx'] = np.array(vx).astype(np.float)
+    dic['vy'] = np.array(vy).astype(np.float)
+    dic['vz'] = np.array(vz).astype(np.float)
+    
+    dic['n'] = N
+    
+    dic['Lx'] = Lx
+    dic['Ly'] = Ly
+    dic['Lz'] = Lz
+
+    
+    return dic
+    
+def start_md(**kwargs):
+    
+    read_from_file = kwargs.get("read_from_file", True)
+    n = kwargs.get("n", 100)
+    L = kwargs.get("L", np.array([5.0, 5.0, 5.0]))
+    
+    path_input = kwargs.get("path_input", "pyMD.inp")
+    
+    conf0_file = kwargs.get("conf0_file", "mdorg.dat")
+    output_conf = kwargs.get("output_conf", "md-w.dat")
+    output_gr = kwargs.get("output_gr", "grmd.dat")
+    num_blocks = kwargs.get("num_blocks", 10)
+    steps_per_block = kwargs.get("steps_per_block", 100)
+    time_step = kwargs.get("time_step", 0.005)
+    temp_option = kwargs.get("temp_option", True)
+    temperature = kwargs.get("temperature", 0.7)
+    potential_cutoff = kwargs.get("potential_cutoff", 3.0)
+    
+   
+    if read_from_file:
+        
+        f = open(path_input, 'r')
+        for line in f:
+            if "INITIAL CONF FILE" in line:
+                conf0_file = line.split()[-1]
+        f.close()
+        
+        f = open(path_input, 'r')
+        for line in f:
+            if "OUTPUT CONF FILE" in line:
+                output_conf = line.split()[-1]
+        f.close()
+        
+        f = open(path_input, 'r')
+        for line in f:
+            if "OUTPUT G(R) FILE" in line:
+                output_gr = line.split()[-1]
+        f.close()    
+        
+        f = open(path_input, 'r')
+        for line in f:
+            if "NUM BLOCKS" in line:
+                num_blocks = int(line.split()[-1])
+        f.close()  
+        
+        f = open(path_input, 'r')
+        for line in f:
+            if "STEPS PER BLOCK" in line:
+                steps_per_block = int(line.split()[-1])
+        f.close()              
+        
+        f = open(path_input, 'r')
+        for line in f:
+            if "TIME STEP" in line:
+                time_step = float(line.split()[-1])
+        f.close() 
+        
+        f = open(path_input, 'r')
+        for line in f:
+            if "TEMPERATURE OPTION" in line:
+                temp_option = bool(line.split()[-1])
+        f.close() 
+        
+        f = open(path_input, 'r')
+        for line in f:
+            if "REQUIRED TEMPERATURE" in line:
+                temperature = float(line.split()[-1])
+        f.close()    
+        
+        f = open(path_input, 'r')
+        for line in f:
+            if "POTENTIAL CUTOFF" in line:
+                potential_cutoff = float(line.split()[-1])
+        f.close()           
+        
+    else:
+        pass
+    
+    dic = {}
+    
+    dic['conf0_file'] = conf0_file
+    dic['output_conf'] = output_conf
+    dic['output_gr'] = output_gr
+    dic['num_blocks'] = num_blocks
+    dic['steps_per_block'] = steps_per_block
+    dic['time_step'] = time_step
+    dic['temp_option'] = temp_option
+    dic['temperature'] = temperature
+    dic['potential_cutoff'] = potential_cutoff
+    
+    dens = np.divide(n, np.prod(L))
+    ro = L[0]/200.0
+    nrad = int(proper_round(L[0]/(2.0*ro)))
+    
+    dic['dens'] = dens
+    dic['ro'] = ro
+    dic['nrad'] = nrad
+        
+    path_mdf_inp = "md.inp"
+    path_mdf_inp = kwargs.get("path_mdf_inp", path_mdf_inp)
+
+
+    keys_start = ['conf0_file', 'output_conf', 'output_gr', 'num_blocks',\
+            'steps_per_block', 'time_step', 'temp_option', 'temperature', 'potential_cutoff']
+
+    f = open(path_mdf_inp, 'w')
+    for key in keys_start:
+        value = dic[key]
+        f.write("{}\n".format(value))
+    f.close()
+    
+    return dic
+    
+    
+    
+    
+
+    
     
     
