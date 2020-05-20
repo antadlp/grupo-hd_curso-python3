@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/home/antadlp/Documents/project-aPython-DM-2020-2/draft_consola2")
+sys.path.append("/home/antadlp/Documents/grupo-hd_curso-python3/consola2")
 from metodos_md import *
 import subprocess
 
