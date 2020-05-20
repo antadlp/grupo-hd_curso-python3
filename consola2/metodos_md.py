@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from mendeleev import element
+# from mendeleev import element
 import sys
 sys.path.append("/home/antadlp/Documents/grupo-hd_curso-python3/consola2")
 import subprocess
@@ -40,7 +40,7 @@ def conf_inicial_md(**kwargs):
         r['y'][i] = box*ranf() - box2
         r['z'][i] = box*ranf() - box2
         el = elms[i]
-        m = element(el).atomic_weight        
+        m = 1.0       
         r['element'][i] = el
         r['m'][i] = m
     
