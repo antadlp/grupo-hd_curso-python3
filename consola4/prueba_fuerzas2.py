@@ -82,7 +82,29 @@ for i in range(n-1):
             fy[j] = fy[j] - fyij
             fz[j] = fz[j] - fzij 
 
-            print("{}{}{}".format(fx[j], fy[j], fz[j]))
+            # print("{:15.10f}{:15.10f}{:15.10f}".format(fx[j], fy[j], fz[j]))
+
+
+    fx[i] = fxi
+    fy[i] = fyi
+    fz[i] = fzi
+
+    pot = pot*4.0
+    vir = vir*24.0/3.0
+    for i in range(n):
+        fx[i] = fx[i]*24.0
+        fy[i] = fy[i]*24.0
+        fz[i] = fz[i]*24.0
+
+    pot = np.divide(pot, n)
+    vir = np.divide(vir, n)
+
+    print("POT: {}".format(pot))
+    print("VIR: {}".format(vir))
+        
+
+            
+
 
 
 
